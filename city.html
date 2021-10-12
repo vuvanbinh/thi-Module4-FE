@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <title>City</title>
+</head>
+<body>
+<h1>City</h1>
+<span style="font-size: 18px ; color: red" id="success"></span>
+<div id="result"></div>
+<br><br>
+<div id="result1"></div>
+
+
+</body>
+<script>
+    $(document).ready(function () {
+        showAllCity()
+    })
+
+    function showAllCity() {
+        $.ajax({
+            url: 'http://localhost:8080/city',
+            type: "GET",
+            success: function (data) {
+                let result =
+                    "<div>\n" +
+                    "<br>\n" +
+                    " <button style='height: 35px' onclick='showFormCity(`result1`)'>Thêm thành phố</button> \n" +
+                    "<br>\n" +
+                    "    <table width='60%' border='1px'>\n" +
+                    "        <thead>\n" +
+                    "        <tr>\n" +
+                    "            <th>STT</th>\n" +
+                    "            <th>Tên</th>\n" +
+                    "            <th>Quốc gia</th>\n" +
+                    "        </tr>\n" +
+                    "        </thead>\n" +
+                    "        <tbody>"
+                $.each(data, function (index, value) {
+                    result +=
+                        `<tr style="height: 30px">
+                        <td>${index + 1}</td>
+                        <td><a href="" onclick="showCityDetail(${value.id})">${value.name}</a></td>
+                        <td>${value.country}</td>
+                        </tr>
+                        `
+                })
+                result +=
+                    " </tbody>\n" +
+                    "    </table>\n" +
+                    "</div>"
+                document.getElementById("result").innerHTML = result;
+            }
+        })
+    }
+
+    function showCityDetail(id) {
+        document.getElementById("success").innerText = "";
+        event.preventDefault();
+        $.ajax({
+            url: 'http://localhost:8080/city/findById/' + id,
+            type: "GET",
+            success: function (data) {
+                document.getElementById("result").innerHTML =
+                    `
+<button style="height: 40px" onclick="reload()">Quay lại danh sách thành phố</a></button>
+<fieldset style="width: 50%">
+    <legend style="font-size: 25px">Thành phố ${data.name}</legend>
+    <table>
+        <tr>
+            <td>Tên:</td>
+            <td>${data.name}</td>
+        </tr>
+        <tr>
+            <td>Quốc gia:</td>
+            <td>${data.country}</td>
+        </tr>
+        <tr>
+            <td>Diện tích:</td>
+            <td>${data.area}</td>
+        </tr>
+        <tr>
+            <td>Dân số:</td>
+            <td>${data.population}</td>
+        </tr>
+        <tr>
+            <td>GDP:</td>
+            <td>${data.gdp}</td>
+        </tr>
+        <tr>
+            <td>Giới thiệu:</td>
+            <td>${data.description}</td>
+        </tr>
+        <tr>
+            <td><button onclick="editCity(${data.id})">Sửa thông tin</button></td>
+            <td><button onclick="deleteCity(${data.id})">Xoá Thành phố</button></td>
+        </tr>
+    </table>
+</fieldset>
+                    `
+            }
+        })
+    }
+
+    function editCity(id){
+        showFormCity();
+        $.ajax({
+            url: 'http://localhost:8080/city/findById/'+id,
+            type: "GET",
+            success: function (data) {
+                $('#id').val(data.id)
+                $('#name').val(data.name)
+                $('#country').val(data.country)
+                $('#area').val(data.area)
+                $('#population').val(data.population)
+                $('#description').val(data.description)
+            }
+        })
+
+    }
+
+    function showFormCity(result) {
+        document.getElementById("success").innerText='';
+        let formCity =
+            `
+    <form action="">
+        <span id="success1" style="font-size: 20px ; color: red"></span>
+        <fieldset style="width: 50%">
+            <legend style="font-size: 25px">Information</legend>
+        <div style="padding-left: 600px"><button style="width: 100px;height: 30px" onclick="cancelSaveCity()">Cancel</button></div>
+            <input type="number" id="id" hidden>
+            <table>
+                <tr>
+                    <td><label for="name">Tên:</label></td>
+                    <td><input type="text" id="name"></td>
+
+                </tr>
+                <tr>
+                    <td><label for="country">Quốc gia:</label></td>
+                    <td><input type="text" id="country"></td>
+                </tr>
+                <tr>
+                    <td><label for="area">Diện tích:</label></td>
+                    <td><input type="number" id="area"></td>
+                </tr>
+                <tr>
+                    <td><label for="population">Dân số:</label></td>
+                    <td><input type="number" id="population"></td>
+                </tr>
+                <tr>
+                    <td><label for="gdp"></label>GDP:</td>
+                    <td><input type="number" id="gdp"></td>
+                </tr>
+                <tr>
+                    <td><label for="description">Giới thiệu:</label></td>
+                    <td><textarea name="description" id="description"
+                    cols="30" rows="7" placeholder="Nhập mô tả về thành phố"></textarea></td>
+                </tr>
+                <tr>
+                    <td><button type="submit" onclick="saveCity()">Submit</button></label></td>
+                    <td><button type="reset" >Reset</button></td>
+                    <td></td>
+                </tr>
+            </table>
+        </fieldset>
+    </form>
+            `
+
+        if (result === 'result1') {
+            document.getElementById("result1").innerHTML = formCity;
+        } else {
+            document.getElementById("result").innerHTML = formCity;
+        }
+    }
+
+    function saveCity() {
+        event.preventDefault();
+
+        let name = $('#name').val()
+        let country = $('#country').val()
+        let area = $('#area').val()
+        let population = $('#population').val()
+        let gdp = $('#gdp').val()
+        let description = $('#description').val()
+
+        let city = {
+            name: name,
+            country: country,
+            area: area,
+            population:population,
+            gdp: gdp,
+            description: description
+        }
+        let id = $('#id').val()
+        let success = {message: "Save success!"}
+        let url = '';
+        if (id === '') {
+            url = 'http://localhost:8080/city/save'
+        } else {
+            url = 'http://localhost:8080/city/save?id=' + id
+        }
+        $.ajax({
+            url: url,
+            method: 'POST',
+            data: JSON.stringify(city),
+            contentType: 'application/json; charset=utf8',
+            success: function (data) {
+                if (JSON.stringify(data) === JSON.stringify(success)) {
+
+                    if (id===''){
+                        showAllCity()
+                        document.getElementById("success").innerText = "Thêm thành công";
+                        document.getElementById("result1").innerText = "";
+                    }else {
+                        showCityDetail(id)
+                        document.getElementById("success").innerText = "Sửa thông tin thành phố thành công";
+                    }
+
+                } else {
+                    document.getElementById("success1").innerHTML = "Thêm không thành công,thành phố đã tồn tại";
+                }
+            }
+        })
+    }
+
+    function deleteCity(id){
+        document.getElementById("success").innerHTML='';
+
+        if (confirm('Xác nhận xoá thành phố này khỏi danh sách:')){
+            let message={message: "Delete success!"}
+            $.ajax({
+                url: 'http://localhost:8080/city/delete/'+id,
+                type: "DELETE",
+                success: function (data) {
+                    if (JSON.stringify(data)===JSON.stringify(message)){
+                        showAllCity();
+                        document.getElementById("success").innerHTML="Xoá thành công"
+                    }
+                }
+            })
+        }else {
+            return
+        };
+    }
+
+
+    function cancelSaveCity(){
+        document.getElementById("result1").innerHTML='';
+    }
+
+    function reload() {
+        location.reload();
+    }
+
+</script>
+</html>
